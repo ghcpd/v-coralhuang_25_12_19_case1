@@ -21,6 +21,21 @@
     </div>
   </div>
 
+  <!-- Bug: 搜索框没有防抖功能 -->
+  <div class="card">
+    <div class="row">
+      <input id="searchBox" placeholder="Search by name, email, or skills..." style="flex:1"/>
+      <select id="sortBy">
+        <option value="">Sort by...</option>
+        <option value="date_asc">Submission Date (Old First)</option>
+        <option value="date_desc">Submission Date (New First)</option>
+        <option value="status">Status</option>
+        <option value="id">Candidate ID</option>
+      </select>
+      <button onclick="loadCandidates()">Apply Filters</button>
+    </div>
+  </div>
+
   <div class="card grid2">
     <div>
       <div class="row">
@@ -30,9 +45,18 @@
         </div>
         <button onclick="loadCandidates()">Load Candidates</button>
       </div>
+      <!-- Bug: 批量操作 UI 但后端支持不完整 -->
+      <div class="row" style="margin-bottom: 10px">
+        <button onclick="selectAll()">Select All</button>
+        <button onclick="deselectAll()">Deselect All</button>
+        <button onclick="bulkUpdate()">Bulk Update Selected</button>
+        <span id="selectedCount" class="muted">0 selected</span>
+      </div>
+      
       <table id="candTable">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"/></th>
             <th>Candidate</th>
             <th>JD</th>
             <th>Submission</th>
@@ -42,6 +66,18 @@
         </thead>
         <tbody></tbody>
       </table>
+      
+      <!-- Bug: 分页控制但没有实现 -->
+      <div class="row" style="margin-top: 10px">
+        <button onclick="prevPage()">← Previous</button>
+        <span id="pageInfo" class="muted">Page 1 of 1</span>
+        <button onclick="nextPage()">Next →</button>
+        <select id="pageSize">
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+        </select>
+      </div>
     </div>
 
     <div>
@@ -68,6 +104,7 @@
           <option>Submitted</option>
           <option>Interviewing</option>
           <option>Rejected</option>
+          <option>Accepted</option>
         </select>
       </div>
       <div style="flex:1;min-width:280px">

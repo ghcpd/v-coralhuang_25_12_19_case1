@@ -481,6 +481,11 @@ async def api_update_status(payload: Dict):
     if not candidate_id or not status:
         raise HTTPException(status_code=400, detail="candidate_id and status are required.")
 
+    # Bug: 验证逻辑有漏洞 - 只检查了 Rejected 状态，但允许从 Rejected 转回其他状态
+    valid_statuses = ["Submitted", "Interviewing", "Rejected", "Accepted"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+
     now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     with _connect() as conn:
         init_db(conn)
@@ -488,6 +493,10 @@ async def api_update_status(payload: Dict):
         if not old:
             raise HTTPException(status_code=404, detail=f"Candidate not found: {candidate_id}")
         old_status = old[0]
+
+        # Bug: 缺少状态转换验证 - 应该阻止从 Rejected/Accepted 转回其他状态
+        # Bug: 没有检查是否为重复更新
+        # Bug: 没有并发锁定机制
 
         conn.execute(
             """
@@ -507,3 +516,25 @@ async def api_update_status(payload: Dict):
         conn.commit()
 
     return {"updated": True, "candidate_id": candidate_id, "old_status": old_status, "new_status": status, "changed_at": now}
+
+
+@app.post("/api/bulk_update_status")
+async def api_bulk_update_status(payload: Dict):
+    """Bulk update status for multiple candidates"""
+    candidate_ids = payload.get("candidate_ids", [])
+    status = str(payload.get("status", "")).strip()
+    reason = str(payload.get("reason", "")).strip()
+
+    if not candidate_ids or not status:
+        raise HTTPException(status_code=400, detail="candidate_ids and status are required.")
+
+    # Bug: 批量操作没有事务保护，可能部分成功部分失败
+    results = []
+    for cid in candidate_ids:
+        try:
+            result = await api_update_status({"candidate_id": cid, "status": status, "reason": reason})
+            results.append({"candidate_id": cid, "success": True})
+        except Exception as e:
+            results.append({"candidate_id": cid, "success": False, "error": str(e)})
+    
+    return {"results": results, "total": len(candidate_ids)}

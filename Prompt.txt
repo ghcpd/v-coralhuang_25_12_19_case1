@@ -1,103 +1,75 @@
-# Recruitment Management Dashboard
+# Recruitment Management Dashboard - Advanced Challenge
 
-You are a **frontend software engineer** tasked with building a **production-quality Recruitment Management Dashboard** using **HTML, CSS, and JavaScript**.
+You are a **senior full-stack software engineer** tasked with **debugging and enhancing** a **production-quality Recruitment Management Dashboard** using **HTML, CSS, JavaScript, and Python (FastAPI)**.
 
-You may **modify or redesign any part** of the provided codebase. The goal is a functional, polished, and user-friendly dashboard.
+**CRITICAL**: The provided codebase contains **intentional bugs and incomplete implementations**. Your mission is to identify and fix all bugs, complete missing features, and refactor for production quality.
 
 ---
 
-## What You Must Build
+## Core Requirements
 
-### 1. Candidate Table with Full Interactions
-- **Search**: Filter by name, email, or skills (live filtering)
-- **Sorting**: Sort by submission date (asc/desc), status, or candidate ID
-- **Pagination**: Page controls (prev/next, page size selector, current page display)
-- **Row Selection**: Checkboxes for multi-select
-- **Bulk Actions**: Apply status updates to multiple selected rows
+### 1. Candidate Table Features
+- **Live Search**: Filter by name, email, or skills with debouncing (300ms)
+- **Sorting**: Sort by submission date (asc/desc), status, candidate ID
+- **Pagination**: Working prev/next controls, page size selector, page info display
+- **Row Selection**: Checkboxes for multi-select candidates
+- **Bulk Actions**: Apply status updates to multiple selected candidates
 
 ### 2. Status Management
-- **Server-side Validation**: Reject invalid status transitions (e.g., can't change rejected candidates back)
-- **Duplicate Prevention**: Block updates that don't change the status
-- **Concurrent Protection**: Prevent simultaneous updates to the same candidate
-- **Immediate Feedback**: Show visual confirmation and handle errors gracefully
-- **State Sync**: Auto-refresh table, reports, and match views after updates
+- **Validation Rules**: 
+  - Valid transitions: `Submitted → Interviewing → Rejected/Accepted`
+  - Once `Rejected` or `Accepted`, status is **immutable**
+  - Block updates that don't change the status
+- **Concurrency Protection**: Prevent simultaneous updates to same candidate
+- **Transaction Safety**: Bulk operations must be atomic (all-or-nothing)
 
 ### 3. Professional UI/UX
-- **NO Raw JSON**: Never show `JSON.stringify()` output on the page
-- **Formatted Data Display**:
-  - Reports: Visual cards/charts showing status distribution and trends
-  - Match Results: Progress bars for scores, formatted skill breakdowns
-  - Dates: User-friendly format (not ISO strings)
-  - Skills: Properly formatted lists, not semicolon strings
-- **Status Badges**: Color-coded pills (Submitted: blue, Interviewing: yellow, Rejected: red)
-- **Loading States**: Show "Loading..." or spinners during async operations
-- **Empty States**: Friendly messages like "No candidates found"
-- **Error Handling**: Inline error messages, not `alert()` boxes
-- **Button States**: Disable during operations to prevent duplicate clicks
-
-### 4. Deliverables
-Submit complete source code plus a **README.md** with:
-- How to install and run locally
-- Key features and interactions
-- Design decisions and tradeoffs
+- **NO Raw JSON**: Format all data displays properly
+- **Status Badges**: Color-coded pills (Submitted: blue, Interviewing: yellow, Rejected: red, Accepted: green)
+- **Data Formatting**:
+  - Reports: Visual charts for status distribution and trends
+  - Match Results: Progress bars for scores, formatted skill lists
+  - Dates: User-friendly format (e.g., "Dec 19, 2025")
+  - Skills: Comma-separated lists, not semicolons
+- **Loading States**: Show spinners during async operations, disable buttons to prevent duplicate clicks
+- **Error Handling**: Inline error messages, NO `alert()` boxes
+- **Empty States**: Friendly messages when no data
 
 ---
 
-## Problems with Current Base Implementation
+## Known Bugs to Fix
 
-The provided base has **critical issues** you must fix:
+### Backend Issues:
+- Status validation allows invalid transitions (e.g., `Rejected → Submitted`)
+- No duplicate update prevention
+- Missing concurrency control (race conditions possible)
+- Bulk operations lack transaction safety
+- Missing database indexes
 
-### Missing Core Features
-No search, sorting, or pagination
-No row selection or bulk operations
-No status transition validation
-No duplicate update prevention
+### Frontend Issues:
+- Search has no debouncing
+- Pagination and bulk operations show `alert('Not implemented')`
+- No loading indicators
+- Still using `alert()` for errors
+- Buttons not disabled during operations
+- Race conditions in data loading
+- Reports show raw JSON instead of visualizations
 
-### UI Problems
-**Raw JSON displayed on page** (reports, match results)
-No loading indicators
-Poor error handling (uses `alert()`)
-No empty states
-Plain text statuses (no color coding)
-Buttons not disabled during operations
-
----
-
-## What You Must Implement
-
-**Table Features:**
-- Search input filtering candidates by name/email/skills
-- Sort dropdown with multiple options
-- Pagination controls (prev/next, page size, page info)
-- Checkboxes for row selection
-- Bulk update UI for selected rows
-
-**Status Updates:**
-- Server-side: Validate transitions, prevent duplicates
-- Client-side: Optimistic updates, concurrent protection, rollback on errors
-- Visual feedback during updates ("Updating..." on rows)
-
-**UI Polish:**
-- Replace ALL JSON displays with formatted components
-- Color-coded status badges
-- Loading indicators for all async operations
-- Inline error messages (no alerts)
-- Empty state messages
-- Disabled button states
-- Format dates and data properly
-
-**Data Visualization:**
-- Report: Cards/charts for status counts and submission trends
-- Match Results: Score progress bar, skill matching breakdown, pass/fail indicators
-
-**Technical:**
-- Client-side state management (search/sort/pagination)
-- Smooth, responsive interactions
-- No layout shifts during loading
-- Clean, maintainable code
+### UI/UX Issues:
+- Raw JSON displayed in reports and match views
+- ISO date strings not formatted
+- Skills displayed with semicolons
+- No color-coded status badges
+- Missing empty states
 
 ---
 
-## Summary
+## Deliverables
 
-Transform the basic implementation into a **polished, professional dashboard**. Focus on creating an intuitive, beautiful, and reliable user experience. All data must be displayed in a formatted, user-friendly way—never show raw JSON to users.
+1. **Fixed and Enhanced Code**: All bugs fixed, all features implemented
+2. **README.md**: Installation instructions, bug fixes documented, architecture decisions
+3. **Testing Evidence**: Demonstrate working features (screenshots/video optional)
+
+---
+
+**Remember**: The bugs are intentionally subtle. Read the code carefully before making changes. Focus on creating a polished, production-ready dashboard.
