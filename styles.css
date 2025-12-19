@@ -38,12 +38,43 @@ input, select, button {
 
 button {
   cursor: pointer;
+  border: none;
+  background: #2b7bff;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+button.btn-small {
+  padding: 6px 10px;
+  background: #f4f6f9;
+  color: #111;
+  border: 1px solid #dfe6f2;
 }
 
 table {
   border-collapse: collapse;
   width: 100%;
   margin-top: 10px;
+}
+
+/* Status badge colors */
+.status-badge.status-submitted { background: #e7f0ff; color: #0b63ff; border: 1px solid rgba(43,123,255,0.15); }
+.status-badge.status-interviewing { background: #fff7e5; color: #b57f00; border: 1px solid rgba(246,201,69,0.15); }
+.status-badge.status-rejected { background: #ffecec; color: #c5292a; border: 1px solid rgba(255,90,95,0.15); }
+.status-badge.status-accepted { background: #eaffef; color: #0b9b3b; border: 1px solid rgba(51,204,102,0.15); }
+
+/* Progress bar */
+.progress { background: #f1f4f8; border-radius: 6px; height: 10px; overflow: hidden; }
+.progress-bar { height: 10px; background: linear-gradient(90deg,#2b7bff,#7ac0ff); border-radius: 6px; }
+
+.inline-error { color: #c5292a; font-size: 13px; }
+
+/* Improve button grouping in controls */
+.row > button, .row > select { margin-left: auto; }
+.row > div:first-child { flex: 1 1 auto; }
+
+@media (max-width: 900px) {
+  .row > button, .row > select { margin-left: 0; }
 }
 
 th, td {
