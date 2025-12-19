@@ -1,4 +1,4 @@
-# Recruitment Management Dashboard - Advanced Challenge
+# Recruitment Management Dashboard – Advanced Challenge
 
 You are a **senior full-stack software engineer** tasked with **debugging and enhancing** a **production-quality Recruitment Management Dashboard** using **HTML, CSS, JavaScript, and Python (FastAPI)**.
 
@@ -9,58 +9,84 @@ You are a **senior full-stack software engineer** tasked with **debugging and en
 ## Core Requirements
 
 ### 1. Candidate Table Features
-- **Live Search**: Filter by name, email, or skills with debouncing (300ms)
-- **Sorting**: Sort by submission date (asc/desc), status, candidate ID
-- **Pagination**: Working prev/next controls, page size selector, page info display
-- **Row Selection**: Checkboxes for multi-select candidates
-- **Bulk Actions**: Apply status updates to multiple selected candidates
+
+* **Live Search**: Filter by name, email, or skills with debouncing (300ms)
+* **Sorting**: Sort by submission date (asc/desc), status, candidate ID
+* **Pagination**: Working prev/next controls, page size selector, page info display
+* **Row Selection**: Checkboxes for multi-select candidates
+* **Bulk Actions**: Apply status updates to multiple selected candidates
+
+---
 
 ### 2. Status Management
-- **Validation Rules**: 
-  - Valid transitions: `Submitted → Interviewing → Rejected/Accepted`
-  - Once `Rejected` or `Accepted`, status is **immutable**
-  - Block updates that don't change the status
-- **Concurrency Protection**: Prevent simultaneous updates to same candidate
-- **Transaction Safety**: Bulk operations must be atomic (all-or-nothing)
+
+* **Validation Rules**:
+
+  * Valid transitions: `Submitted → Interviewing → Rejected/Accepted`
+  * Once `Rejected` or `Accepted`, status is **immutable**
+  * Block updates that don't change the status
+* **Concurrency Protection**: Prevent simultaneous updates to same candidate
+* **Transaction Safety**: Bulk operations must be atomic (all-or-nothing)
+
+---
 
 ### 3. Professional UI/UX
-- **NO Raw JSON**: Format all data displays properly
-- **Status Badges**: Color-coded pills (Submitted: blue, Interviewing: yellow, Rejected: red, Accepted: green)
-- **Data Formatting**:
-  - Reports: Visual charts for status distribution and trends
-  - Match Results: Progress bars for scores, formatted skill lists
-  - Dates: User-friendly format (e.g., "Dec 19, 2025")
-  - Skills: Comma-separated lists, not semicolons
-- **Loading States**: Show spinners during async operations, disable buttons to prevent duplicate clicks
-- **Error Handling**: Inline error messages, NO `alert()` boxes
-- **Empty States**: Friendly messages when no data
+
+* **NO Raw JSON**: Format all data displays properly
+* **Status Badges**: Color-coded pills
+
+  * Submitted: blue
+  * Interviewing: yellow
+  * Rejected: red
+  * Accepted: green
+* **Data Formatting**:
+
+  * Reports: Visual charts for status distribution and trends
+  * Match Results: Progress bars for scores, formatted skill lists
+  * Dates: User-friendly format (e.g., "Dec 19, 2025")
+  * Skills: Comma-separated lists, not semicolons
+* **Loading States**: Show spinners during async operations, disable buttons to prevent duplicate clicks
+* **Error Handling**: Inline error messages, NO `alert()` boxes
+* **Empty States**: Friendly messages when no data
+
+**UI Layout Requirement (MANDATORY)**
+
+* The existing button layout is intentionally suboptimal.
+* You must **redesign and modify the button layout and action placement** to achieve a **cleaner, more professional, and visually balanced interface**.
+* Button grouping, hierarchy, spacing, alignment, and visual weight must be reconsidered and improved.
+* Avoid cluttered or scattered buttons; actions should feel intentional and easy to scan.
+* The final layout should clearly communicate primary vs secondary actions and reduce visual noise.
+* Exact layout, styling, and structure decisions are **left to your judgment** and will be evaluated based on overall usability and aesthetics.
 
 ---
 
 ## Known Bugs to Fix
 
 ### Backend Issues:
-- Status validation allows invalid transitions (e.g., `Rejected → Submitted`)
-- No duplicate update prevention
-- Missing concurrency control (race conditions possible)
-- Bulk operations lack transaction safety
-- Missing database indexes
+
+* Status validation allows invalid transitions (e.g., `Rejected → Submitted`)
+* No duplicate update prevention
+* Missing concurrency control (race conditions possible)
+* Bulk operations lack transaction safety
+* Missing database indexes
 
 ### Frontend Issues:
-- Search has no debouncing
-- Pagination and bulk operations show `alert('Not implemented')`
-- No loading indicators
-- Still using `alert()` for errors
-- Buttons not disabled during operations
-- Race conditions in data loading
-- Reports show raw JSON instead of visualizations
+
+* Search has no debouncing
+* Pagination and bulk operations show `alert('Not implemented')`
+* No loading indicators
+* Still using `alert()` for errors
+* Buttons not disabled during operations
+* Race conditions in data loading
+* Reports show raw JSON instead of visualizations
 
 ### UI/UX Issues:
-- Raw JSON displayed in reports and match views
-- ISO date strings not formatted
-- Skills displayed with semicolons
-- No color-coded status badges
-- Missing empty states
+
+* Raw JSON displayed in reports and match views
+* ISO date strings not formatted
+* Skills displayed with semicolons
+* No color-coded status badges
+* Missing empty states
 
 ---
 
