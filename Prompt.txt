@@ -1,95 +1,101 @@
-## Prompt
+You are a **frontend software engineer**.
 
-You are a **frontend software engineer** working on an existing internal product.
+Your goal is to design and implement a **Recruitment Management Dashboard** that is usable, consistent, and production-quality.
 
-You are given a **working baseline web UI demo** for a **Recruitment Management Dashboard**.
-The baseline source code has already been provided and **must not be rewritten from scratch**.
+You may **modify, refactor, or redesign any part of the provided codebase** as needed to complete the task.
+You are **not required to preserve the original structure or implementation**, as long as the final result satisfies the requirements.
 
-The application is built with **plain HTML, CSS, and vanilla JavaScript**.
-No frontend frameworks or external UI libraries are allowed.
-
----
-
-## Your Task
-
-Improve the existing UI to correctly handle **complex table interactions, state synchronization, and visual polish**, while keeping all baseline functionality intact.
-
-The focus is on **frontend correctness, interaction quality, and UI professionalism**.
+The application should be implemented using **HTML, CSS, and JavaScript**.
 
 ---
 
-## What You Need to Do
+## Core Objective
 
-### 1. Improve Candidate Table Interactions
+Build a **functional and polished Recruitment Management Dashboard** that supports:
 
-Enhance the candidate table to support:
+* Managing candidate data
+* Viewing and interacting with recruitment status
+* Handling complex table interactions
+* Maintaining consistent UI state across views
+* Providing a clean, professional user experience
 
-* Search (by name / email / skills)
-* Sorting (submission date, status, match score)
-* Pagination with stable behavior under filtering
-* Row selection without breaking inline actions
-
-All interactions must work together without inconsistent UI state.
+The primary goal is **correctness, usability, and clarity**, not adherence to any existing implementation.
 
 ---
 
-### 2. Inline Status Updates (Core Requirement)
+## Functional Requirements
 
-Improve candidate status updates with the following behavior:
+### 1. Candidate Management & Table Interactions
+
+The dashboard must provide a candidate table that supports:
+
+* Searching candidates by name, email, or skills
+* Sorting by key fields (e.g. submission date, status, match score)
+* Pagination with stable behavior when filters or search conditions change
+* Row-level interactions (selection, inline actions) without conflicts
+
+All table interactions should work together predictably and consistently.
+
+---
+
+### 2. Candidate Status Updates
+
+The system must support updating candidate status with the following behavior:
 
 * Enforce valid status transitions only
-* Update the UI optimistically
-* Show per-row loading and disable only the affected row
-* On failure, roll back the UI and show an inline error
-* Keep sorting, filtering, and pagination stable after updates
+* Provide immediate visual feedback when an update is triggered
+* Prevent duplicate or conflicting updates
+* Handle failures gracefully, with clear error messaging
+* Keep the UI state consistent after updates (no stale data)
 
 ---
 
-### 3. State Synchronization Across Views
+### 3. State Synchronization
 
-Ensure UI consistency between:
+Ensure consistent state across all relevant views, such as:
 
-* Candidate table
-* Report summary (status counts, trends)
-* Candidate detail or match view (if visible)
+* Candidate list
+* Summary metrics or reports
+* Candidate detail or match views (if present)
 
-Any status change must be reflected across all relevant UI sections without manual refresh.
-
----
-
-### 4. UI Visual Quality & Polish (Required)
-
-Improve the overall look and usability of the interface, including:
-
-* Clear layout structure (header, controls, content areas)
-* Improved spacing, alignment, and typography
-* Consistent visual treatment for candidate statuses
-* Clear visual hierarchy between primary actions and secondary information
-* Table readability improvements (row spacing, hover states, focus styles)
-* Subtle transitions or feedback for interactive elements
-
-The UI should feel **clean, intentional, and production-quality**, not just functionally correct.
+Any change to candidate data should be reflected across the dashboard without requiring a manual refresh.
 
 ---
 
-### 5. Loading and Error Feedback
+### 4. UI Quality & Visual Polish
 
-Add clear UI feedback for:
+The dashboard should demonstrate strong UI craftsmanship:
 
-* Data loading
-* Status update in progress
-* Update failures
+* Beautiful design
+* Clear layout structure (navigation, controls, content areas)
+* Consistent spacing, typography, and alignment
+* Clear visual hierarchy between primary and secondary information
+* Readable and well-structured tables
+* Meaningful visual cues for status, selection, loading, and errors
+* Subtle, purposeful interaction feedback
 
-Avoid layout shifts or flickering during state changes.
+The UI should feel **intentional and professional**, not experimental or purely functional.
 
 ---
 
-## Constraints
+### 5. Loading and Error Handling
 
-* Do not remove or break existing functionality
-* Do not introduce frontend frameworks
-* Keep changes incremental and readable
-* All state remains client-side
+Provide appropriate UI feedback for:
+
+* Data loading states
+* Ongoing user actions (e.g. status updates)
+* Errors and exceptional cases
+
+The interface should remain stable and usable during these states, without layout jumps or confusing transitions.
+
+---
+
+## Technical Freedom & Constraints
+
+* You may restructure files, logic, and UI as needed
+* You may refactor or replace existing implementations
+* Choose sensible defaults and abstractions
+* Focus on clarity, maintainability, and correctness
 
 ---
 
@@ -97,21 +103,24 @@ Avoid layout shifts or flickering during state changes.
 
 You must submit:
 
-* Updated HTML, CSS, and JavaScript source code
-* A **README.md** describing:
-  * How to start and access the application locally (exact commands or steps)
-  * What was improved
-  * How table state and status updates are handled
-  * UI and interaction design decisions
-  * Any assumptions or tradeoffs
+* The complete source code for the dashboard
+* A **README.md** that clearly explains:
+
+  * How to install dependencies (if any)
+  * How to start and access the application locally
+  * The main features and interactions of the dashboard
+  * Key design and architectural decisions
+  * Any assumptions or tradeoffs made
 
 ---
 
 ## Evaluation Criteria
 
-* Baseline functionality still works
-* Table interactions behave correctly under edge cases
-* Status updates are robust and consistent
-* UI state remains synchronized
-* UI is clearly more polished and usable
-* Code quality is clear and maintainable
+The solution will be evaluated based on:
+
+* Whether the Recruitment Management Dashboard works as intended
+* Correct handling of complex UI interactions and state
+* UI clarity, polish, and usability
+* Robust handling of loading and error states
+* Code readability and overall design quality
+
