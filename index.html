@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Recruitment Dashboard (Base)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Recruitment Dashboard (Base)</h1>
+  <div class="muted">Single-file demo: import Excel → list/report → match → update status (with audit table stored in SQLite).</div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Import Excel (must contain sheets: JDs, Candidates)</label>
+        <input type="file" id="excelFile" accept=".xlsx"/>
+      </div>
+      <button onclick="importExcel()">Import</button>
+      <span id="importResult" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card grid2">
+    <div>
+      <div class="row">
+        <div>
+          <label>Filter by JD_ID (optional)</label>
+          <input id="jdFilter" placeholder="e.g. JD-1001"/>
+        </div>
+        <button onclick="loadCandidates()">Load Candidates</button>
+      </div>
+      <table id="candTable">
+        <thead>
+          <tr>
+            <th>Candidate</th>
+            <th>JD</th>
+            <th>Submission</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="row">
+        <div>
+          <label>Report for JD_ID (optional)</label>
+          <input id="jdReport" placeholder="e.g. JD-1001"/>
+        </div>
+        <button onclick="loadReport()">Load Report</button>
+      </div>
+      <pre id="reportBox">{}</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Update Status</label>
+        <input id="updCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="updStatus">
+          <option>Submitted</option>
+          <option>Interviewing</option>
+          <option>Rejected</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:280px">
+        <label>Reason (only for Rejected)</label>
+        <input id="updReason" placeholder="e.g. Not a fit"/>
+      </div>
+      <button onclick="updateStatus()">Update</button>
+      <span id="updResult" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Match Candidate</label>
+        <input id="matchCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+      </div>
+      <button onclick="doMatch()">Match</button>
+    </div>
+    <pre id="matchBox">{}</pre>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+## Prompt
+
+You are a **frontend software engineer** working on an existing internal product.
+
+You are given a **working baseline web UI demo** for a **Recruitment Management Dashboard**.
+The baseline source code has already been provided and **must not be rewritten from scratch**.
+
+The application is built with **plain HTML, CSS, and vanilla JavaScript**.
+No frontend frameworks or external UI libraries are allowed.
+
+---
+
+## Your Task
+
+Improve the existing UI to correctly handle **complex table interactions, state synchronization, and visual polish**, while keeping all baseline functionality intact.
+
+The focus is on **frontend correctness, interaction quality, and UI professionalism**.
+
+---
+
+## What You Need to Do
+
+### 1. Improve Candidate Table Interactions
+
+Enhance the candidate table to support:
+
+* Search (by name / email / skills)
+* Sorting (submission date, status, match score)
+* Pagination with stable behavior under filtering
+* Row selection without breaking inline actions
+
+All interactions must work together without inconsistent UI state.
+
+---
+
+### 2. Inline Status Updates (Core Requirement)
+
+Improve candidate status updates with the following behavior:
+
+* Enforce valid status transitions only
+* Update the UI optimistically
+* Show per-row loading and disable only the affected row
+* On failure, roll back the UI and show an inline error
+* Keep sorting, filtering, and pagination stable after updates
+
+---
+
+### 3. State Synchronization Across Views
+
+Ensure UI consistency between:
+
+* Candidate table
+* Report summary (status counts, trends)
+* Candidate detail or match view (if visible)
+
+Any status change must be reflected across all relevant UI sections without manual refresh.
+
+---
+
+### 4. UI Visual Quality & Polish (Required)
+
+Improve the overall look and usability of the interface, including:
+
+* Clear layout structure (header, controls, content areas)
+* Improved spacing, alignment, and typography
+* Consistent visual treatment for candidate statuses
+* Clear visual hierarchy between primary actions and secondary information
+* Table readability improvements (row spacing, hover states, focus styles)
+* Subtle transitions or feedback for interactive elements
+
+The UI should feel **clean, intentional, and production-quality**, not just functionally correct.
+
+---
+
+### 5. Loading and Error Feedback
+
+Add clear UI feedback for:
+
+* Data loading
+* Status update in progress
+* Update failures
+
+Avoid layout shifts or flickering during state changes.
+
+---
+
+## Constraints
+
+* Do not remove or break existing functionality
+* Do not introduce frontend frameworks
+* Keep changes incremental and readable
+* All state remains client-side
+
+---
+
+## Deliverables
+
+You must submit:
+
+* Updated HTML, CSS, and JavaScript source code
+* A **README.md** describing:
+
+  * What was improved
+  * How table state and status updates are handled
+  * UI and interaction design decisions
+  * Any assumptions or tradeoffs
+
+---
+
+## Evaluation Criteria
+
+* Baseline functionality still works
+* Table interactions behave correctly under edge cases
+* Status updates are robust and consistent
+* UI state remains synchronized
+* UI is clearly more polished and usable
+* Code quality is clear and maintainable
