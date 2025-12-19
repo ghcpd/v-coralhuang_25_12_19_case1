@@ -99,7 +99,7 @@ You must submit:
 
 * Updated HTML, CSS, and JavaScript source code
 * A **README.md** describing:
-
+  * How to start and access the application locally (exact commands or steps)
   * What was improved
   * How table state and status updates are handled
   * UI and interaction design decisions
