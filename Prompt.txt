@@ -1,126 +1,103 @@
-You are a **frontend software engineer**.
+# Recruitment Management Dashboard
 
-Your goal is to design and implement a **Recruitment Management Dashboard** that is usable, consistent, and production-quality.
+You are a **frontend software engineer** tasked with building a **production-quality Recruitment Management Dashboard** using **HTML, CSS, and JavaScript**.
 
-You may **modify, refactor, or redesign any part of the provided codebase** as needed to complete the task.
-You are **not required to preserve the original structure or implementation**, as long as the final result satisfies the requirements.
-
-The application should be implemented using **HTML, CSS, and JavaScript**.
+You may **modify or redesign any part** of the provided codebase. The goal is a functional, polished, and user-friendly dashboard.
 
 ---
 
-## Core Objective
+## What You Must Build
 
-Build a **functional and polished Recruitment Management Dashboard** that supports:
+### 1. Candidate Table with Full Interactions
+- **Search**: Filter by name, email, or skills (live filtering)
+- **Sorting**: Sort by submission date (asc/desc), status, or candidate ID
+- **Pagination**: Page controls (prev/next, page size selector, current page display)
+- **Row Selection**: Checkboxes for multi-select
+- **Bulk Actions**: Apply status updates to multiple selected rows
 
-* Managing candidate data
-* Viewing and interacting with recruitment status
-* Handling complex table interactions
-* Maintaining consistent UI state across views
-* Providing a clean, professional user experience
+### 2. Status Management
+- **Server-side Validation**: Reject invalid status transitions (e.g., can't change rejected candidates back)
+- **Duplicate Prevention**: Block updates that don't change the status
+- **Concurrent Protection**: Prevent simultaneous updates to the same candidate
+- **Immediate Feedback**: Show visual confirmation and handle errors gracefully
+- **State Sync**: Auto-refresh table, reports, and match views after updates
 
-The primary goal is **correctness, usability, and clarity**, not adherence to any existing implementation.
+### 3. Professional UI/UX
+- **NO Raw JSON**: Never show `JSON.stringify()` output on the page
+- **Formatted Data Display**:
+  - Reports: Visual cards/charts showing status distribution and trends
+  - Match Results: Progress bars for scores, formatted skill breakdowns
+  - Dates: User-friendly format (not ISO strings)
+  - Skills: Properly formatted lists, not semicolon strings
+- **Status Badges**: Color-coded pills (Submitted: blue, Interviewing: yellow, Rejected: red)
+- **Loading States**: Show "Loading..." or spinners during async operations
+- **Empty States**: Friendly messages like "No candidates found"
+- **Error Handling**: Inline error messages, not `alert()` boxes
+- **Button States**: Disable during operations to prevent duplicate clicks
 
----
-
-## Functional Requirements
-
-### 1. Candidate Management & Table Interactions
-
-The dashboard must provide a candidate table that supports:
-
-* Searching candidates by name, email, or skills
-* Sorting by key fields (e.g. submission date, status, match score)
-* Pagination with stable behavior when filters or search conditions change
-* Row-level interactions (selection, inline actions) without conflicts
-
-All table interactions should work together predictably and consistently.
-
----
-
-### 2. Candidate Status Updates
-
-The system must support updating candidate status with the following behavior:
-
-* Enforce valid status transitions only
-* Provide immediate visual feedback when an update is triggered
-* Prevent duplicate or conflicting updates
-* Handle failures gracefully, with clear error messaging
-* Keep the UI state consistent after updates (no stale data)
+### 4. Deliverables
+Submit complete source code plus a **README.md** with:
+- How to install and run locally
+- Key features and interactions
+- Design decisions and tradeoffs
 
 ---
 
-### 3. State Synchronization
+## Problems with Current Base Implementation
 
-Ensure consistent state across all relevant views, such as:
+The provided base has **critical issues** you must fix:
 
-* Candidate list
-* Summary metrics or reports
-* Candidate detail or match views (if present)
+### Missing Core Features
+No search, sorting, or pagination
+No row selection or bulk operations
+No status transition validation
+No duplicate update prevention
 
-Any change to candidate data should be reflected across the dashboard without requiring a manual refresh.
-
----
-
-### 4. UI Quality & Visual Polish
-
-The dashboard should demonstrate strong UI craftsmanship:
-
-* Beautiful design
-* Clear layout structure (navigation, controls, content areas)
-* Consistent spacing, typography, and alignment
-* Clear visual hierarchy between primary and secondary information
-* Readable and well-structured tables
-* Meaningful visual cues for status, selection, loading, and errors
-* Subtle, purposeful interaction feedback
-
-The UI should feel **intentional and professional**, not experimental or purely functional.
+### UI Problems
+**Raw JSON displayed on page** (reports, match results)
+No loading indicators
+Poor error handling (uses `alert()`)
+No empty states
+Plain text statuses (no color coding)
+Buttons not disabled during operations
 
 ---
 
-### 5. Loading and Error Handling
+## What You Must Implement
 
-Provide appropriate UI feedback for:
+**Table Features:**
+- Search input filtering candidates by name/email/skills
+- Sort dropdown with multiple options
+- Pagination controls (prev/next, page size, page info)
+- Checkboxes for row selection
+- Bulk update UI for selected rows
 
-* Data loading states
-* Ongoing user actions (e.g. status updates)
-* Errors and exceptional cases
+**Status Updates:**
+- Server-side: Validate transitions, prevent duplicates
+- Client-side: Optimistic updates, concurrent protection, rollback on errors
+- Visual feedback during updates ("Updating..." on rows)
 
-The interface should remain stable and usable during these states, without layout jumps or confusing transitions.
+**UI Polish:**
+- Replace ALL JSON displays with formatted components
+- Color-coded status badges
+- Loading indicators for all async operations
+- Inline error messages (no alerts)
+- Empty state messages
+- Disabled button states
+- Format dates and data properly
+
+**Data Visualization:**
+- Report: Cards/charts for status counts and submission trends
+- Match Results: Score progress bar, skill matching breakdown, pass/fail indicators
+
+**Technical:**
+- Client-side state management (search/sort/pagination)
+- Smooth, responsive interactions
+- No layout shifts during loading
+- Clean, maintainable code
 
 ---
 
-## Technical Freedom & Constraints
+## Summary
 
-* You may restructure files, logic, and UI as needed
-* You may refactor or replace existing implementations
-* Choose sensible defaults and abstractions
-* Focus on clarity, maintainability, and correctness
-
----
-
-## Deliverables
-
-You must submit:
-
-* The complete source code for the dashboard
-* A **README.md** that clearly explains:
-
-  * How to install dependencies (if any)
-  * How to start and access the application locally
-  * The main features and interactions of the dashboard
-  * Key design and architectural decisions
-  * Any assumptions or tradeoffs made
-
----
-
-## Evaluation Criteria
-
-The solution will be evaluated based on:
-
-* Whether the Recruitment Management Dashboard works as intended
-* Correct handling of complex UI interactions and state
-* UI clarity, polish, and usability
-* Robust handling of loading and error states
-* Code readability and overall design quality
-
+Transform the basic implementation into a **polished, professional dashboard**. Focus on creating an intuitive, beautiful, and reliable user experience. All data must be displayed in a formatted, user-friendly way—never show raw JSON to users.
