@@ -40,6 +40,37 @@ button {
   cursor: pointer;
 }
 
+/* Button variants to improve hierarchy and layout */
+button.primary {
+  background: linear-gradient(180deg,#0b67ff,#0554d6);
+  color: #fff;
+  border: 1px solid rgba(3,43,128,0.6);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+button.secondary {
+  background: #f6f7fb;
+  color: #222;
+  border: 1px solid #d7dcef;
+}
+
+/* Status pill colors */
+.pill.status-Submitted { background: #e8f0ff; color:#1b4ed6; border-color: rgba(27,78,214,0.15)}
+.pill.status-Interviewing { background: #fff7e6; color:#a86b00; border-color: rgba(168,107,0,0.12)}
+.pill.status-Rejected { background: #ffecec; color:#b60000; border-color: rgba(182,0,0,0.12)}
+.pill.status-Accepted { background: #ecffef; color:#04660f; border-color: rgba(4,102,15,0.12)}
+
+.reportBox {
+  background: linear-gradient(180deg,#fbfdff,#f5f8ff);
+  border: 1px solid #e9f0ff;
+  padding: 12px;
+  border-radius: 10px;
+}
+.matchBox { background: #fff; border:1px solid #eef3ff; border-radius:8px }
+
+/* Simple progress bar used in match view */
+.progress { height: 12px; background: #eef2ff; border-radius: 8px; overflow: hidden; margin-top:6px }
+.progress .fill { height: 12px; background: linear-gradient(90deg,#2b8cff,#0b67ff); width: 0%; }
+
 table {
   border-collapse: collapse;
   width: 100%;

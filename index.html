@@ -16,7 +16,7 @@
         <label>Import Excel (must contain sheets: JDs, Candidates)</label>
         <input type="file" id="excelFile" accept=".xlsx"/>
       </div>
-      <button onclick="importExcel()">Import</button>
+      <button class="primary" onclick="importExcel()">Import</button>
       <span id="importResult" class="muted"></span>
     </div>
   </div>
@@ -32,7 +32,7 @@
         <option value="status">Status</option>
         <option value="id">Candidate ID</option>
       </select>
-      <button onclick="loadCandidates()">Apply Filters</button>
+      <button class="primary" onclick="loadCandidates()">Apply Filters</button>
     </div>
   </div>
 
@@ -43,13 +43,13 @@
           <label>Filter by JD_ID (optional)</label>
           <input id="jdFilter" placeholder="e.g. JD-1001"/>
         </div>
-        <button onclick="loadCandidates()">Load Candidates</button>
+        <button class="primary" onclick="loadCandidates()">Load Candidates</button>
       </div>
       <!-- Bug: 批量操作 UI 但后端支持不完整 -->
       <div class="row" style="margin-bottom: 10px">
-        <button onclick="selectAll()">Select All</button>
-        <button onclick="deselectAll()">Deselect All</button>
-        <button onclick="bulkUpdate()">Bulk Update Selected</button>
+        <button class="secondary" onclick="selectAll()">Select All</button>
+        <button class="secondary" onclick="deselectAll()">Deselect All</button>
+        <button class="primary" onclick="bulkUpdate()">Bulk Update Selected</button>
         <span id="selectedCount" class="muted">0 selected</span>
       </div>
       
@@ -86,9 +86,14 @@
           <label>Report for JD_ID (optional)</label>
           <input id="jdReport" placeholder="e.g. JD-1001"/>
         </div>
-        <button onclick="loadReport()">Load Report</button>
+        <button class="primary" onclick="loadReport()">Load Report</button>
+        <div id="reportMeta" class="muted" style="margin-left:8px"></div>
       </div>
-      <pre id="reportBox">{}</pre>
+
+      <div id="reportBox" class="reportBox">
+        <div id="statusSummary"></div>
+        <div id="submissionTrend" class="muted" style="margin-top:8px;font-size:13px"></div>
+      </div>
     </div>
   </div>
 
@@ -111,7 +116,8 @@
         <label>Reason (only for Rejected)</label>
         <input id="updReason" placeholder="e.g. Not a fit"/>
       </div>
-      <button onclick="updateStatus()">Update</button>
+      <button class="primary" onclick="updateStatus()">Update</button>
+      <span id="updSpinner" style="display:none;margin-left:8px">⏳</span>
       <span id="updResult" class="muted"></span>
     </div>
   </div>
@@ -122,9 +128,10 @@
         <label>Match Candidate</label>
         <input id="matchCandidate" placeholder="Candidate_ID e.g. C-0001"/>
       </div>
-      <button onclick="doMatch()">Match</button>
+      <button class="primary" onclick="doMatch()">Match</button>
+      <div id="matchMsg" class="muted" style="margin-left:8px"></div>
     </div>
-    <pre id="matchBox">{}</pre>
+    <div id="matchBox" class="matchBox muted" style="padding:12px">No match selected.</div>
   </div>
 
   <script src="script.js"></script>
