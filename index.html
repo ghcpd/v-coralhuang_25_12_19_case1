@@ -3,129 +3,178 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Recruitment Dashboard (Base)</title>
+  <title>Recruitment Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Recruitment Dashboard (Base)</h1>
-  <div class="muted">Single-file demo: import Excel → list/report → match → update status (with audit table stored in SQLite).</div>
-
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>Import Excel (must contain sheets: JDs, Candidates)</label>
-        <input type="file" id="excelFile" accept=".xlsx"/>
-      </div>
-      <button onclick="importExcel()">Import</button>
-      <span id="importResult" class="muted"></span>
+  <header class="header">
+    <div class="container">
+      <h1>Recruitment Management Dashboard</h1>
+      <p class="header-subtitle">Professional candidate management and matching system</p>
     </div>
-  </div>
+  </header>
 
-  <!-- Bug: 搜索框没有防抖功能 -->
-  <div class="card">
-    <div class="row">
-      <input id="searchBox" placeholder="Search by name, email, or skills..." style="flex:1"/>
-      <select id="sortBy">
-        <option value="">Sort by...</option>
-        <option value="date_asc">Submission Date (Old First)</option>
-        <option value="date_desc">Submission Date (New First)</option>
-        <option value="status">Status</option>
-        <option value="id">Candidate ID</option>
-      </select>
-      <button onclick="loadCandidates()">Apply Filters</button>
-    </div>
-  </div>
-
-  <div class="card grid2">
-    <div>
-      <div class="row">
-        <div>
-          <label>Filter by JD_ID (optional)</label>
-          <input id="jdFilter" placeholder="e.g. JD-1001"/>
+  <main class="container">
+    <!-- ========== IMPORT SECTION ========== -->
+    <section class="card" id="importSection">
+      <h2>📁 Import Data</h2>
+      <div class="form-group">
+        <label>Excel File (JDs & Candidates sheets)</label>
+        <div class="input-group">
+          <input type="file" id="excelFile" accept=".xlsx"/>
+          <button class="btn btn-primary" onclick="importExcel()">Import</button>
         </div>
-        <button onclick="loadCandidates()">Load Candidates</button>
+        <span id="importResult" class="message"></span>
       </div>
-      <!-- Bug: 批量操作 UI 但后端支持不完整 -->
-      <div class="row" style="margin-bottom: 10px">
-        <button onclick="selectAll()">Select All</button>
-        <button onclick="deselectAll()">Deselect All</button>
-        <button onclick="bulkUpdate()">Bulk Update Selected</button>
-        <span id="selectedCount" class="muted">0 selected</span>
-      </div>
-      
-      <table id="candTable">
-        <thead>
-          <tr>
-            <th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"/></th>
-            <th>Candidate</th>
-            <th>JD</th>
-            <th>Submission</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      
-      <!-- Bug: 分页控制但没有实现 -->
-      <div class="row" style="margin-top: 10px">
-        <button onclick="prevPage()">← Previous</button>
-        <span id="pageInfo" class="muted">Page 1 of 1</span>
-        <button onclick="nextPage()">Next →</button>
-        <select id="pageSize">
-          <option value="10">10 per page</option>
-          <option value="25">25 per page</option>
-          <option value="50">50 per page</option>
-        </select>
-      </div>
-    </div>
+    </section>
 
-    <div>
-      <div class="row">
-        <div>
-          <label>Report for JD_ID (optional)</label>
-          <input id="jdReport" placeholder="e.g. JD-1001"/>
+    <!-- ========== CANDIDATES SECTION ========== -->
+    <section class="card">
+      <h2>👥 Candidates Management</h2>
+      
+      <!-- Filters & Search -->
+      <div class="filters-section">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Search</label>
+            <input id="searchBox" 
+              type="text" 
+              placeholder="Name, email, or skills..." 
+              oninput="onSearchInput(event)"
+              aria-label="Search candidates"/>
+          </div>
+          <div class="filter-group">
+            <label>JD Filter</label>
+            <input id="jdFilter" placeholder="e.g., JD-1001"/>
+          </div>
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select id="sortBy" onchange="onSortChange(event)">
+              <option value="">None</option>
+              <option value="date_asc">Date (Old First)</option>
+              <option value="date_desc">Date (New First)</option>
+              <option value="status">Status</option>
+              <option value="id">ID</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" onclick="applyFilters()">Apply Filters</button>
         </div>
-        <button onclick="loadReport()">Load Report</button>
       </div>
-      <pre id="reportBox">{}</pre>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>Update Status</label>
-        <input id="updCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+      <!-- Candidates Table -->
+      <div class="table-wrapper">
+        <table id="candTable">
+          <thead>
+            <tr>
+              <th width="40">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select all on page"/>
+              </th>
+              <th>Candidate</th>
+              <th>JD</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th width="120">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div>
-        <label>Status</label>
-        <select id="updStatus">
-          <option>Submitted</option>
-          <option>Interviewing</option>
-          <option>Rejected</option>
-          <option>Accepted</option>
-        </select>
-      </div>
-      <div style="flex:1;min-width:280px">
-        <label>Reason (only for Rejected)</label>
-        <input id="updReason" placeholder="e.g. Not a fit"/>
-      </div>
-      <button onclick="updateStatus()">Update</button>
-      <span id="updResult" class="muted"></span>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>Match Candidate</label>
-        <input id="matchCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+      <!-- Pagination & Selection Controls -->
+      <div class="controls-section">
+        <div class="left-controls">
+          <button class="btn btn-small" onclick="selectAll()">Select All</button>
+          <button class="btn btn-small" onclick="deselectAll()">Deselect All</button>
+          <span id="selectedCount" class="badge">0 selected</span>
+        </div>
+
+        <div class="pagination-controls">
+          <button class="btn btn-small" onclick="prevPage()">← Prev</button>
+          <span id="pageInfo" class="page-info">Page 1 of 1</span>
+          <button class="btn btn-small" onclick="nextPage()">Next →</button>
+          <select id="pageSize" onchange="onPageSizeChange(event)">
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
       </div>
-      <button onclick="doMatch()">Match</button>
+    </section>
+
+    <!-- ========== BULK UPDATE SECTION ========== -->
+    <section class="card">
+      <h2>🔄 Bulk Update Status</h2>
+      <div class="form-group">
+        <label>Update selected candidates to:</label>
+        <div class="bulk-form">
+          <select id="bulkStatus">
+            <option>Submitted</option>
+            <option>Interviewing</option>
+            <option>Rejected</option>
+            <option>Accepted</option>
+          </select>
+          <input id="bulkReason" placeholder="Reason (for Rejected)" />
+          <button class="btn btn-primary" onclick="bulkUpdate()" disabled title="Select candidates first">Update Selected</button>
+        </div>
+        <span id="updResult" class="message"></span>
+      </div>
+    </section>
+
+    <!-- ========== MAIN GRID ========== -->
+    <div class="grid-2">
+      <!-- ========== INDIVIDUAL UPDATE ========== -->
+      <section class="card">
+        <h2>✏️ Individual Update</h2>
+        <div class="form-group">
+          <label>Candidate ID</label>
+          <input id="updCandidate" placeholder="e.g., C-0001"/>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="updStatus">
+            <option>Submitted</option>
+            <option>Interviewing</option>
+            <option>Rejected</option>
+            <option>Accepted</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reason (for Rejected)</label>
+          <input id="updReason" placeholder="e.g., Not a fit"/>
+        </div>
+        <button class="btn btn-primary" onclick="updateStatus()">Update Status</button>
+        <span id="updResult" class="message"></span>
+      </section>
+
+      <!-- ========== MATCH FUNCTIONALITY ========== -->
+      <section class="card">
+        <h2>🎯 Candidate Matching</h2>
+        <div class="form-group">
+          <label>Candidate ID</label>
+          <input id="matchCandidate" placeholder="e.g., C-0001"/>
+        </div>
+        <button class="btn btn-primary" onclick="doMatch()">Show Match Details</button>
+        <div id="matchBox" class="result-box"></div>
+      </section>
     </div>
-    <pre id="matchBox">{}</pre>
-  </div>
+
+    <!-- ========== REPORTS SECTION ========== -->
+    <section class="card">
+      <h2>📊 Reports & Analytics</h2>
+      <div class="form-group">
+        <label>Filter by JD (optional)</label>
+        <div class="input-group">
+          <input id="jdReport" placeholder="e.g., JD-1001"/>
+          <button class="btn btn-primary" onclick="loadReport()">Generate Report</button>
+        </div>
+      </div>
+      <div id="reportBox" class="result-box"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Recruitment Dashboard v2.0 - Enhanced with full search, pagination, bulk actions, and real-time validation</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
