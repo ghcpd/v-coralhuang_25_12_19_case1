@@ -97,6 +97,11 @@ def init_db(conn: sqlite3.Connection) -> None:
             reason TEXT,
             FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
         );
+
+        -- Helpful indexes for queries
+        CREATE INDEX IF NOT EXISTS idx_candidates_jd ON candidates(jd_id);
+        CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(current_status);
+        CREATE INDEX IF NOT EXISTS idx_candidates_submission ON candidates(submission_date);
         """
     )
     conn.commit()
@@ -334,29 +339,50 @@ async def api_import(excel: UploadFile = File(...)):
 
 
 @app.get("/api/candidates")
-def api_candidates(jd: Optional[str] = None):
+def api_candidates(jd: Optional[str] = None, q: Optional[str] = None, sort: Optional[str] = None, page: int = 1, page_size: int = 10):
+    """Supports optional JD filter, free-text search (name,email,skills), sorting and pagination."""
+    page = max(1, int(page))
+    page_size = max(1, min(200, int(page_size)))
+    offset = (page - 1) * page_size
+
     with _connect() as conn:
         init_db(conn)
+        where_clauses = []
+        params: List = []
         if jd:
-            rows = fetch_all(
-                conn,
-                """
-                SELECT candidate_id, name, email, jd_id, submission_date, current_status
-                FROM candidates
-                WHERE jd_id = ?
-                ORDER BY submission_date DESC;
-                """,
-                (jd,),
-            )
-        else:
-            rows = fetch_all(
-                conn,
-                """
-                SELECT candidate_id, name, email, jd_id, submission_date, current_status
-                FROM candidates
-                ORDER BY submission_date DESC;
-                """,
-            )
+            where_clauses.append("jd_id = ?")
+            params.append(jd)
+        if q:
+            q_like = f"%{q.strip().lower()}%"
+            where_clauses.append("(lower(name) LIKE ? OR lower(email) LIKE ? OR lower(skills) LIKE ?)")
+            params.extend([q_like, q_like, q_like])
+
+        where = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+        order = "ORDER BY submission_date DESC"
+        if sort == "date_asc":
+            order = "ORDER BY submission_date ASC"
+        elif sort == "date_desc":
+            order = "ORDER BY submission_date DESC"
+        elif sort == "status":
+            order = "ORDER BY current_status ASC"
+        elif sort == "id":
+            order = "ORDER BY candidate_id ASC"
+
+        total_row = fetch_one(conn, f"SELECT COUNT(*) FROM candidates {where};", tuple(params))
+        total = total_row[0] if total_row else 0
+
+        rows = fetch_all(
+            conn,
+            f"""
+            SELECT candidate_id, name, email, jd_id, submission_date, current_status
+            FROM candidates
+            {where}
+            {order}
+            LIMIT ? OFFSET ?;
+            """,
+            tuple(params + [page_size, offset]),
+        )
 
     items = [
         {
@@ -369,7 +395,7 @@ def api_candidates(jd: Optional[str] = None):
         }
         for r in rows
     ]
-    return {"items": items, "count": len(items)}
+    return {"items": items, "count": len(items), "total": total, "page": page, "page_size": page_size}
 
 
 @app.get("/api/report")
@@ -481,7 +507,6 @@ async def api_update_status(payload: Dict):
     if not candidate_id or not status:
         raise HTTPException(status_code=400, detail="candidate_id and status are required.")
 
-    # Bug: 验证逻辑有漏洞 - 只检查了 Rejected 状态，但允许从 Rejected 转回其他状态
     valid_statuses = ["Submitted", "Interviewing", "Rejected", "Accepted"]
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
@@ -489,22 +514,41 @@ async def api_update_status(payload: Dict):
     now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     with _connect() as conn:
         init_db(conn)
-        old = fetch_one(conn, "SELECT current_status FROM candidates WHERE candidate_id = ?;", (candidate_id,))
-        if not old:
+        # Acquire an immediate lock to help avoid race conditions on concurrent updates
+        conn.execute("BEGIN IMMEDIATE;")
+        cur = conn.execute("SELECT current_status FROM candidates WHERE candidate_id = ?;", (candidate_id,))
+        row = cur.fetchone()
+        if not row:
+            conn.rollback()
             raise HTTPException(status_code=404, detail=f"Candidate not found: {candidate_id}")
-        old_status = old[0]
+        old_status = row[0]
 
-        # Bug: 缺少状态转换验证 - 应该阻止从 Rejected/Accepted 转回其他状态
-        # Bug: 没有检查是否为重复更新
-        # Bug: 没有并发锁定机制
+        # Prevent no-op updates
+        if old_status == status:
+            conn.rollback()
+            raise HTTPException(status_code=400, detail="Status is already set to the requested value.")
 
+        # Prevent changes once final
+        if old_status in ("Rejected", "Accepted"):
+            conn.rollback()
+            raise HTTPException(status_code=400, detail=f"Status is final and cannot be changed from {old_status}.")
+
+        # Enforce valid transitions: Submitted -> Interviewing -> Rejected/Accepted
+        if old_status == "Submitted" and status != "Interviewing":
+            conn.rollback()
+            raise HTTPException(status_code=400, detail="Invalid transition: Submitted can only move to Interviewing.")
+        if old_status == "Interviewing" and status not in ("Rejected", "Accepted") and status != "Interviewing":
+            conn.rollback()
+            raise HTTPException(status_code=400, detail="Invalid transition from Interviewing.")
+
+        # Perform update and audit
         conn.execute(
             """
             UPDATE candidates
             SET current_status = ?, rejection_reason = ?, last_updated = ?
             WHERE candidate_id = ?;
             """,
-            (status, reason if status.lower() == "rejected" else "", now, candidate_id),
+            (status, reason if status == "Rejected" else "", now, candidate_id),
         )
         conn.execute(
             """
@@ -520,7 +564,7 @@ async def api_update_status(payload: Dict):
 
 @app.post("/api/bulk_update_status")
 async def api_bulk_update_status(payload: Dict):
-    """Bulk update status for multiple candidates"""
+    """Bulk update status for multiple candidates (atomic). If any update would fail, no changes are applied."""
     candidate_ids = payload.get("candidate_ids", [])
     status = str(payload.get("status", "")).strip()
     reason = str(payload.get("reason", "")).strip()
@@ -528,13 +572,50 @@ async def api_bulk_update_status(payload: Dict):
     if not candidate_ids or not status:
         raise HTTPException(status_code=400, detail="candidate_ids and status are required.")
 
-    # Bug: 批量操作没有事务保护，可能部分成功部分失败
-    results = []
-    for cid in candidate_ids:
+    valid_statuses = ["Submitted", "Interviewing", "Rejected", "Accepted"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    # Perform all updates in a single transaction with immediate lock
+    with _connect() as conn:
+        init_db(conn)
         try:
-            result = await api_update_status({"candidate_id": cid, "status": status, "reason": reason})
-            results.append({"candidate_id": cid, "success": True})
+            conn.execute("BEGIN IMMEDIATE;")
+            # Validate all first
+            for cid in candidate_ids:
+                cur = conn.execute("SELECT current_status FROM candidates WHERE candidate_id = ?;", (cid,))
+                row = cur.fetchone()
+                if not row:
+                    raise HTTPException(status_code=404, detail=f"Candidate not found: {cid}")
+                old_status = row[0]
+                if old_status == status:
+                    raise HTTPException(status_code=400, detail=f"Candidate {cid} already has status {status}.")
+                if old_status in ("Rejected", "Accepted"):
+                    raise HTTPException(status_code=400, detail=f"Candidate {cid} is final ({old_status}) and cannot be changed.")
+                if old_status == "Submitted" and status != "Interviewing":
+                    raise HTTPException(status_code=400, detail=f"Invalid transition for {cid}: Submitted can only move to Interviewing.")
+                if old_status == "Interviewing" and status not in ("Rejected", "Accepted") and status != "Interviewing":
+                    raise HTTPException(status_code=400, detail=f"Invalid transition for {cid} from Interviewing.")
+
+            # All validations passed; apply updates
+            for cid in candidate_ids:
+                cur = conn.execute("SELECT current_status FROM candidates WHERE candidate_id = ?;", (cid,))
+                old_status = cur.fetchone()[0]
+                conn.execute(
+                    "UPDATE candidates SET current_status = ?, rejection_reason = ?, last_updated = ? WHERE candidate_id = ?;",
+                    (status, reason if status == "Rejected" else "", now, cid),
+                )
+                conn.execute(
+                    "INSERT INTO status_audit (candidate_id, old_status, new_status, changed_at, reason) VALUES (?, ?, ?, ?, ?);",
+                    (cid, old_status, status, now, reason),
+                )
+            conn.commit()
+        except HTTPException:
+            conn.rollback()
+            raise
         except Exception as e:
-            results.append({"candidate_id": cid, "success": False, "error": str(e)})
-    
-    return {"results": results, "total": len(candidate_ids)}
+            conn.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    return {"updated": True, "count": len(candidate_ids), "status": status}
