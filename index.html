@@ -24,15 +24,21 @@
   <!-- Bug: 搜索框没有防抖功能 -->
   <div class="card">
     <div class="row">
-      <input id="searchBox" placeholder="Search by name, email, or skills..." style="flex:1"/>
-      <select id="sortBy">
-        <option value="">Sort by...</option>
-        <option value="date_asc">Submission Date (Old First)</option>
-        <option value="date_desc">Submission Date (New First)</option>
-        <option value="status">Status</option>
-        <option value="id">Candidate ID</option>
-      </select>
-      <button onclick="loadCandidates()">Apply Filters</button>
+      <div style="flex:1; min-width: 200px;">
+        <label>Search (name, email, skills)</label>
+        <input id="searchBox" placeholder="Type to search..." />
+      </div>
+      <div>
+        <label>Sort by</label>
+        <select id="sortBy">
+          <option value="">Default</option>
+          <option value="date_asc">Submission Date (Old First)</option>
+          <option value="date_desc">Submission Date (New First)</option>
+          <option value="status">Status</option>
+          <option value="id">Candidate ID</option>
+        </select>
+      </div>
+      <button id="applyFiltersBtn" onclick="applyFilters()">Apply Filters</button>
     </div>
   </div>
 
@@ -43,14 +49,24 @@
           <label>Filter by JD_ID (optional)</label>
           <input id="jdFilter" placeholder="e.g. JD-1001"/>
         </div>
-        <button onclick="loadCandidates()">Load Candidates</button>
+        <button id="loadCandidatesBtn" onclick="loadCandidates()">Load Candidates</button>
       </div>
-      <!-- Bug: 批量操作 UI 但后端支持不完整 -->
-      <div class="row" style="margin-bottom: 10px">
-        <button onclick="selectAll()">Select All</button>
-        <button onclick="deselectAll()">Deselect All</button>
-        <button onclick="bulkUpdate()">Bulk Update Selected</button>
-        <span id="selectedCount" class="muted">0 selected</span>
+      
+      <!-- Redesigned button layout for better UX -->
+      <div class="action-bar">
+        <div class="action-group">
+          <button id="selectAllBtn" onclick="selectAll()" class="secondary">Select All</button>
+          <button id="deselectAllBtn" onclick="deselectAll()" class="secondary">Deselect All</button>
+          <span id="selectedCount" class="muted">0 selected</span>
+        </div>
+        <div class="action-group">
+          <button id="bulkUpdateBtn" onclick="bulkUpdate()" class="primary" disabled>Bulk Update Status</button>
+        </div>
+      </div>
+      
+      <div id="loadingIndicator" class="loading" style="display:none;">Loading candidates...</div>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <p>No candidates found matching your criteria.</p>
       </div>
       
       <table id="candTable">
@@ -68,11 +84,11 @@
       </table>
       
       <!-- Bug: 分页控制但没有实现 -->
-      <div class="row" style="margin-top: 10px">
-        <button onclick="prevPage()">← Previous</button>
+      <div class="pagination">
+        <button id="prevPageBtn" onclick="prevPage()" disabled>← Previous</button>
         <span id="pageInfo" class="muted">Page 1 of 1</span>
-        <button onclick="nextPage()">Next →</button>
-        <select id="pageSize">
+        <button id="nextPageBtn" onclick="nextPage()" disabled>Next →</button>
+        <select id="pageSize" onchange="changePageSize()">
           <option value="10">10 per page</option>
           <option value="25">25 per page</option>
           <option value="50">50 per page</option>
@@ -86,17 +102,18 @@
           <label>Report for JD_ID (optional)</label>
           <input id="jdReport" placeholder="e.g. JD-1001"/>
         </div>
-        <button onclick="loadReport()">Load Report</button>
+        <button id="loadReportBtn" onclick="loadReport()">Load Report</button>
       </div>
-      <pre id="reportBox">{}</pre>
+      <div id="reportDisplay" class="report-display"></div>
     </div>
   </div>
 
   <div class="card">
+    <h3>Update Candidate Status</h3>
     <div class="row">
       <div>
-        <label>Update Status</label>
-        <input id="updCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+        <label>Candidate ID</label>
+        <input id="updCandidate" placeholder="e.g. C-0001"/>
       </div>
       <div>
         <label>Status</label>
@@ -111,20 +128,21 @@
         <label>Reason (only for Rejected)</label>
         <input id="updReason" placeholder="e.g. Not a fit"/>
       </div>
-      <button onclick="updateStatus()">Update</button>
-      <span id="updResult" class="muted"></span>
+      <button id="updateStatusBtn" onclick="updateStatus()">Update Status</button>
     </div>
+    <div id="updResult" class="result-message"></div>
   </div>
 
   <div class="card">
+    <h3>Match Candidate to JD</h3>
     <div class="row">
       <div>
-        <label>Match Candidate</label>
-        <input id="matchCandidate" placeholder="Candidate_ID e.g. C-0001"/>
+        <label>Candidate ID</label>
+        <input id="matchCandidate" placeholder="e.g. C-0001"/>
       </div>
-      <button onclick="doMatch()">Match</button>
+      <button id="doMatchBtn" onclick="doMatch()">Match</button>
     </div>
-    <pre id="matchBox">{}</pre>
+    <div id="matchResult" class="match-display"></div>
   </div>
 
   <script src="script.js"></script>
