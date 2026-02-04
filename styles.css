@@ -96,3 +96,44 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+/* Buttons */
+button.primary {
+  background: #2b6cff;
+  color: #fff;
+  border: none;
+}
+button.secondary {
+  background: #f3f6ff;
+  border: 1px solid #d9e1ff;
+}
+.btnGroup {
+  display:flex;gap:8px;align-items:center
+}
+
+/* Status badges */
+.status-badge {
+  display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;color:#fff;font-weight:600
+}
+.status-submitted { background:#2b6cff; }
+.status-interviewing { background:#f2b21a; }
+.status-rejected { background:#e12b2b; }
+.status-accepted { background:#2bbf5d; }
+
+/* Spinner */
+.spinner {
+  width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:#2b6cff;animation:spin 1s linear infinite
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.error { color:#9b1c1c; font-size:13px; margin-top:8px }
+
+/* Match card */
+.matchCard { border-radius:8px; padding:10px; background:#fbfdff; border:1px solid #eef4ff }
+.matchCard h3 { margin:0 0 8px 0 }
+.progress { height:14px; background:#eee; border-radius:999px; overflow:hidden }
+.progress > i { display:block; height:100%; background:linear-gradient(90deg,#2b6cff,#77b2ff) }
+
+/* Table status column */
+td.statusCell { font-weight:600 }

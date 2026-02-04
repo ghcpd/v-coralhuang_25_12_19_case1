@@ -97,6 +97,12 @@ def init_db(conn: sqlite3.Connection) -> None:
             reason TEXT,
             FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
         );
+
+        -- Indexes for faster queries
+        CREATE INDEX IF NOT EXISTS idx_candidates_jd_id ON candidates (jd_id);
+        CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates (current_status);
+        CREATE INDEX IF NOT EXISTS idx_candidates_submission_date ON candidates (submission_date);
+        CREATE INDEX IF NOT EXISTS idx_candidates_last_updated ON candidates (last_updated);
         """
     )
     conn.commit()
@@ -334,29 +340,54 @@ async def api_import(excel: UploadFile = File(...)):
 
 
 @app.get("/api/candidates")
-def api_candidates(jd: Optional[str] = None):
+def api_candidates(jd: Optional[str] = None, search: Optional[str] = None, sort: Optional[str] = None, page: int = 1, page_size: int = 10):
+    """Returns paginated, searchable, sortable list of candidates."""
+    if page < 1:
+        page = 1
+    if page_size < 1 or page_size > 100:
+        page_size = 10
+
     with _connect() as conn:
         init_db(conn)
+        where_clauses = []
+        params: List = []
         if jd:
-            rows = fetch_all(
-                conn,
-                """
-                SELECT candidate_id, name, email, jd_id, submission_date, current_status
-                FROM candidates
-                WHERE jd_id = ?
-                ORDER BY submission_date DESC;
-                """,
-                (jd,),
-            )
-        else:
-            rows = fetch_all(
-                conn,
-                """
-                SELECT candidate_id, name, email, jd_id, submission_date, current_status
-                FROM candidates
-                ORDER BY submission_date DESC;
-                """,
-            )
+            where_clauses.append("jd_id = ?")
+            params.append(jd)
+        if search:
+            s = f"%{search.lower()}%"
+            where_clauses.append("(LOWER(name) LIKE ? OR LOWER(email) LIKE ? OR LOWER(skills) LIKE ?)")
+            params.extend([s, s, s])
+
+        where = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+
+        # total count
+        total_row = fetch_one(conn, f"SELECT COUNT(*) FROM candidates {where};", tuple(params))
+        total = total_row[0] if total_row else 0
+
+        # sorting
+        order = "submission_date DESC"
+        if sort == "date_asc":
+            order = "submission_date ASC"
+        elif sort == "date_desc":
+            order = "submission_date DESC"
+        elif sort == "status":
+            order = "current_status ASC"
+        elif sort == "id":
+            order = "candidate_id ASC"
+
+        offset = (page - 1) * page_size
+        rows = fetch_all(
+            conn,
+            f"""
+            SELECT candidate_id, name, email, jd_id, submission_date, current_status, last_updated
+            FROM candidates
+            {where}
+            ORDER BY {order}
+            LIMIT ? OFFSET ?;
+            """,
+            tuple(params + [page_size, offset]),
+        )
 
     items = [
         {
@@ -366,10 +397,13 @@ def api_candidates(jd: Optional[str] = None):
             "jd_id": r[3],
             "submission_date": r[4],
             "current_status": r[5],
+            "last_updated": r[6],
         }
         for r in rows
     ]
-    return {"items": items, "count": len(items)}
+
+    page_count = (total + page_size - 1) // page_size if page_size else 1
+    return {"items": items, "count": total, "page": page, "page_size": page_size, "page_count": page_count}
 
 
 @app.get("/api/report")
@@ -462,14 +496,61 @@ def api_match(candidate_id: str):
         }
 
     score, label, explain = compute_match_score(jd_row, cand_row)
+    # Provide parsed skill lists for better frontend display
+    cand_skills = [s for s in normalize_semicolon_list(cand_row.get("skills", ""))]
+    jd_must = [s for s in normalize_semicolon_list(jd_row.get("must_have_skills", ""))]
+    jd_nice = [s for s in normalize_semicolon_list(jd_row.get("nice_to_have_skills", ""))]
     return {
         "candidate_id": candidate_id,
         "jd_id": jd_row["jd_id"],
         "jd_title": jd_row["title"],
         "match_label": label,
         "match_score": score,
+        "candidate_skills": cand_skills,
+        "jd_must_skills": jd_must,
+        "jd_nice_skills": jd_nice,
         "explain": explain,
     }
+
+
+def _validate_and_update(conn: sqlite3.Connection, candidate_id: str, new_status: str, reason: str):
+    valid_statuses = ["Submitted", "Interviewing", "Rejected", "Accepted"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {new_status}")
+
+    cur = conn.execute("SELECT current_status, last_updated FROM candidates WHERE candidate_id = ?;", (candidate_id,))
+    row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Candidate not found: {candidate_id}")
+    old_status, old_last = row[0], row[1]
+
+    # Block transitions from terminal states to other states
+    if old_status in ("Rejected", "Accepted") and new_status != old_status:
+        raise HTTPException(status_code=400, detail=f"Cannot change status from {old_status} to {new_status}; status is immutable.")
+
+    # Block no-op updates
+    if old_status == new_status:
+        raise HTTPException(status_code=400, detail="Status is identical; no update performed.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    # Optimistic concurrency: only update if last_updated matches
+    cur = conn.execute(
+        """
+        UPDATE candidates
+        SET current_status = ?, rejection_reason = ?, last_updated = ?
+        WHERE candidate_id = ? AND (last_updated = ? OR last_updated IS NULL);
+        """,
+        (new_status, reason if new_status.lower() == "rejected" else "", now, candidate_id, old_last),
+    )
+    if cur.rowcount == 0:
+        # Could be a concurrency conflict
+        raise HTTPException(status_code=409, detail="Update conflict: candidate was modified concurrently. Please retry.")
+
+    conn.execute(
+        "INSERT INTO status_audit (candidate_id, old_status, new_status, changed_at, reason) VALUES (?, ?, ?, ?, ?);",
+        (candidate_id, old_status, new_status, now, reason),
+    )
+    return {"candidate_id": candidate_id, "old_status": old_status, "new_status": new_status, "changed_at": now}
 
 
 @app.post("/api/update_status")
@@ -481,46 +562,25 @@ async def api_update_status(payload: Dict):
     if not candidate_id or not status:
         raise HTTPException(status_code=400, detail="candidate_id and status are required.")
 
-    # Bug: 验证逻辑有漏洞 - 只检查了 Rejected 状态，但允许从 Rejected 转回其他状态
-    valid_statuses = ["Submitted", "Interviewing", "Rejected", "Accepted"]
-    if status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
-
-    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     with _connect() as conn:
         init_db(conn)
-        old = fetch_one(conn, "SELECT current_status FROM candidates WHERE candidate_id = ?;", (candidate_id,))
-        if not old:
-            raise HTTPException(status_code=404, detail=f"Candidate not found: {candidate_id}")
-        old_status = old[0]
+        try:
+            conn.execute("BEGIN IMMEDIATE;")
+            result = _validate_and_update(conn, candidate_id, status, reason)
+            conn.commit()
+        except HTTPException:
+            conn.rollback()
+            raise
+        except Exception as e:
+            conn.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
 
-        # Bug: 缺少状态转换验证 - 应该阻止从 Rejected/Accepted 转回其他状态
-        # Bug: 没有检查是否为重复更新
-        # Bug: 没有并发锁定机制
-
-        conn.execute(
-            """
-            UPDATE candidates
-            SET current_status = ?, rejection_reason = ?, last_updated = ?
-            WHERE candidate_id = ?;
-            """,
-            (status, reason if status.lower() == "rejected" else "", now, candidate_id),
-        )
-        conn.execute(
-            """
-            INSERT INTO status_audit (candidate_id, old_status, new_status, changed_at, reason)
-            VALUES (?, ?, ?, ?, ?);
-            """,
-            (candidate_id, old_status, status, now, reason),
-        )
-        conn.commit()
-
-    return {"updated": True, "candidate_id": candidate_id, "old_status": old_status, "new_status": status, "changed_at": now}
+    return {"updated": True, **result}
 
 
 @app.post("/api/bulk_update_status")
 async def api_bulk_update_status(payload: Dict):
-    """Bulk update status for multiple candidates"""
+    """Bulk update status for multiple candidates; operation is atomic (all succeed or none)."""
     candidate_ids = payload.get("candidate_ids", [])
     status = str(payload.get("status", "")).strip()
     reason = str(payload.get("reason", "")).strip()
@@ -528,13 +588,19 @@ async def api_bulk_update_status(payload: Dict):
     if not candidate_ids or not status:
         raise HTTPException(status_code=400, detail="candidate_ids and status are required.")
 
-    # Bug: 批量操作没有事务保护，可能部分成功部分失败
-    results = []
-    for cid in candidate_ids:
+    with _connect() as conn:
+        init_db(conn)
         try:
-            result = await api_update_status({"candidate_id": cid, "status": status, "reason": reason})
-            results.append({"candidate_id": cid, "success": True})
+            conn.execute("BEGIN IMMEDIATE;")
+            # Validate all first
+            for cid in candidate_ids:
+                _validate_and_update(conn, cid, status, reason)
+            conn.commit()
+        except HTTPException as he:
+            conn.rollback()
+            raise he
         except Exception as e:
-            results.append({"candidate_id": cid, "success": False, "error": str(e)})
-    
-    return {"results": results, "total": len(candidate_ids)}
+            conn.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    return {"results": [{"candidate_id": cid, "success": True} for cid in candidate_ids], "total": len(candidate_ids)}
